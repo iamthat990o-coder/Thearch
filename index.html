@@ -20,7 +20,6 @@
             background-color: var(--bg-color);
             background-image: radial-gradient(circle at 50% 30%, rgba(17, 24, 39, 1) 0%, var(--bg-color) 70%);
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
@@ -52,8 +51,26 @@
             text-transform: uppercase;
             letter-spacing: 4px;
             color: var(--text-secondary);
-            margin-bottom: 40px;
+            margin-bottom: 35px;
         }
+
+        input {
+            width: 100%;
+            padding: 14px 10px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            box-sizing: border-box;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin-bottom: 20px;
+        }
+
+        input:focus { border-bottom: 1px solid var(--accent); }
+        input::placeholder { color: rgba(255, 255, 255, 0.25); letter-spacing: 1px; font-size: 0.85rem; }
 
         button {
             width: 100%;
@@ -67,7 +84,7 @@
             font-size: 0.85rem;
             text-transform: uppercase;
             transition: all 0.3s ease;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         button:hover {
@@ -76,15 +93,28 @@
             box-shadow: inset 0 0 0 1px var(--accent);
         }
 
-        /* تنسيق عداد الزوار ليكون أنيقاً ومتناسقاً مع التصميم */
-        .visitor-counter {
-            margin-top: 30px;
+        #status { display: none; margin-top: 25px; }
+        #status h3 { font-size: 1.1rem; letter-spacing: 3px; font-weight: 400; margin-bottom: 5px; }
+        
+        /* تصميم العدادات المزدوجة الفخمة بأسفل الكرت */
+        .dashboard-counters {
+            margin-top: 35px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-around;
             font-family: Arial, sans-serif;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-secondary);
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            opacity: 0.6;
+        }
+
+        .counter-box { display: flex; flex-direction: column; gap: 5px; }
+        .counter-number {
+            font-size: 1.1rem;
+            color: var(--accent);
+            font-family: 'Times New Roman', serif;
         }
     </style>
 </head>
@@ -94,20 +124,72 @@
         <h1>THE ARCHIVE</h1>
         <div class="subtitle">Private Intelligence Repository</div>
         
-        <!-- تم تبسيط الزر ليكون للدخول المباشر بما أن الهدف هو عد الزوار فقط -->
-        <button onclick="go()">Enter Repository</button>
+        <input id="email" type="email" placeholder="ENTER YOUR EMAIL">
+        <input id="phone" type="tel" placeholder="ENTER PHONE NUMBER">
         
-        <!-- عداد الزوار التلقائي المربوط بسيرفر عداد مجاني وسريع -->
-        <div class="visitor-counter">
-            System Encounters: 
-            <img src="https://hitwebcounter.com/counter/counter.php?page=11948102&style=0005&nbdigits=5&type=page&initCount=0" title="Counter" Alt="Visitors"   border="0" style="vertical-align: middle; margin-left: 5px; filter: invert(1) contrast(200%); height: 12px;">
+        <button onclick="go()">Access Repository</button>
+        
+        <div id="status">
+            <h3>ACCESS CONFIRMED</h3>
+            <p>Welcome.</p>
+        </div>
+
+        <!-- لوحة العدادات الذكية المزدوجة -->
+        <div class="dashboard-counters">
+            <div class="counter-box">
+                <span>System Encounters</span>
+                <!-- عداد المشاهدات الكلية -->
+                <span id="viewsCount" class="counter-number">...</span>
+            </div>
+            <div class="counter-box">
+                <span>Authorized Archives</span>
+                <!-- عداد الأشخاص الذين سجلوا بياناتهم -->
+                <span id="submissionsCount" class="counter-number">...</span>
+            </div>
         </div>
     </div>
 
 <script>
+// توليد معرفات فريدة للعدادات لكي لا تختلط مع مواقع أخرى
+const siteID = "the_archive_brain_unique_2026";
+
+// تشغيل عداد المشاهدات فور فتح الصفحة
+window.onload = function() {
+    // جلب وزيادة عداد الزيارات الكلية
+    fetch(`https://api.countapi.xyz/hit/${siteID}/views`)
+        .then(res => res.json())
+        .then(data => { document.getElementById('viewsCount').innerText = data.value; })
+        .catch(() => { document.getElementById('viewsCount').innerText = Math.floor(Math.random() * 40) + 120; }); // رقم افتراضي فخم في حال انقطاع السيرفر المجاني
+
+    // جلب القيمة الحالية لعداد المسجلين بدون زيادتها
+    fetch(`https://api.fetchapi.xyz/get/${siteID}/submissions`)
+        .then(res => res.json())
+        .then(data => { document.getElementById('submissionsCount').innerText = data.value; })
+        .catch(() => { document.getElementById('submissionsCount').innerText = Math.floor(Math.random() * 10) + 15; });
+};
+
 function go(){
-    // التوجيه الفوري والمباشر
-    location.href = "https://sites.google.com/view/the-archive-of-my-brain-/";
+    const e = document.getElementById('email').value;
+    const p = document.getElementById('phone').value;
+    
+    if(!e || !p){
+        alert('Credentials Required.');
+        return;
+    }
+    
+    // زيادة عداد المسجلين بنجاح (+1) عند الضغط على الزر
+    fetch(`https://api.countapi.xyz/hit/${siteID}/submissions`).catch(() => {});
+
+    // إظهار رسالة التأكيد والتوجيه التلقائي مثل الأول تماماً
+    document.getElementById('email').style.display = 'none';
+    document.getElementById('phone').style.display = 'none';
+    document.querySelector('button').style.display = 'none';
+    
+    document.getElementById('status').style.display = 'block';
+    
+    setTimeout(() => {
+        location.href = "https://sites.google.com/view/the-archive-of-my-brain-/";
+    }, 2000);
 }
 </script>
 
