@@ -4,12 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>The Archive</title>
-    <!-- استدعاء مكتبة EmailJS الأصلية -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-    <script>
-        // تفعيل الحساب باستخدام الـ Public Key الجديد الخاص بكِ
-        emailjs.init({publicKey: "s9|nRGmVkxa0FwVwT"});
-    </script>
     <style>
         :root {
             --bg-color: #030712;
@@ -26,6 +20,7 @@
             background-color: var(--bg-color);
             background-image: radial-gradient(circle at 50% 30%, rgba(17, 24, 39, 1) 0%, var(--bg-color) 70%);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
@@ -36,7 +31,7 @@
         .card {
             background: var(--card-bg);
             padding: 50px 40px;
-            border-radius: 4px; /* زوايا مستقيمة وفخمة بنمط Modern Noir */
+            border-radius: 4px;
             width: 380px;
             text-align: center;
             backdrop-filter: blur(20px);
@@ -60,31 +55,6 @@
             margin-bottom: 40px;
         }
 
-        input {
-            width: 100%;
-            padding: 14px 10px;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            font-size: 0.95rem;
-            outline: none;
-            box-sizing: border-box;
-            text-align: center;
-            font-family: Arial, sans-serif;
-            margin-bottom: 20px;
-        }
-
-        input:focus { 
-            border-bottom: 1px solid var(--accent); 
-        }
-
-        input::placeholder { 
-            color: rgba(255, 255, 255, 0.25); 
-            letter-spacing: 1px; 
-            font-size: 0.85rem; 
-        }
-
         button {
             width: 100%;
             padding: 15px;
@@ -97,6 +67,7 @@
             font-size: 0.85rem;
             text-transform: uppercase;
             transition: all 0.3s ease;
+            margin-top: 20px;
         }
 
         button:hover {
@@ -105,9 +76,15 @@
             box-shadow: inset 0 0 0 1px var(--accent);
         }
 
-        #status { 
-            display: none; 
-            margin-top: 20px; 
+        /* تنسيق عداد الزوار ليكون أنيقاً ومتناسقاً مع التصميم */
+        .visitor-counter {
+            margin-top: 30px;
+            font-family: Arial, sans-serif;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.6;
         }
     </style>
 </head>
@@ -116,34 +93,21 @@
     <div class="card">
         <h1>THE ARCHIVE</h1>
         <div class="subtitle">Private Intelligence Repository</div>
-        <input id="email" type="email" placeholder="ENTER YOUR EMAIL">
-        <button onclick="go()">Access Repository</button>
         
-        <div id="status">
-            <h3>ACCESS CONFIRMED</h3>
-            <p>Welcome.</p>
+        <!-- تم تبسيط الزر ليكون للدخول المباشر بما أن الهدف هو عد الزوار فقط -->
+        <button onclick="go()">Enter Repository</button>
+        
+        <!-- عداد الزوار التلقائي المربوط بسيرفر عداد مجاني وسريع -->
+        <div class="visitor-counter">
+            System Encounters: 
+            <img src="https://hitwebcounter.com/counter/counter.php?page=11948102&style=0005&nbdigits=5&type=page&initCount=0" title="Counter" Alt="Visitors"   border="0" style="vertical-align: middle; margin-left: 5px; filter: invert(1) contrast(200%); height: 12px;">
         </div>
     </div>
 
 <script>
 function go(){
-    const e = document.getElementById('email').value;
-    if(!e){
-        alert('Enter your email');
-        return;
-    }
-    
-    // إرسال البيانات باستخدام المعرفات الجديدة الصحيحة
-    emailjs.send("service_6k89ba9", "template_68r2hdj", {
-        visitor_email: e
-    })
-    .finally(() => {
-        // إظهار رسالة النجاح فوراً والتوجيه التلقائي بعد ثانيتين مثل الكود الأول
-        document.getElementById('status').style.display = 'block';
-        setTimeout(() => {
-            location.href = "https://sites.google.com/view/the-archive-of-my-brain-/";
-        }, 2000);
-    });
+    // التوجيه الفوري والمباشر
+    location.href = "https://sites.google.com/view/the-archive-of-my-brain-/";
 }
 </script>
 
