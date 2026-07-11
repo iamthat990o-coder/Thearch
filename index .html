@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Archive</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>emailjs.init({publicKey:"LV3s-6Fawv0Bb7kfx"});</script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(#07152d,#010811);display:flex;align-items:center;justify-content:center;height:100vh;color:#fff}
+.card{background:rgba(255,255,255,.06);padding:40px;border-radius:20px;width:380px;text-align:center;backdrop-filter:blur(16px)}
+input,button{width:100%;padding:14px;border-radius:10px;border:none;margin-top:16px}
+button{cursor:pointer;font-weight:bold}
+#status{display:none;margin-top:20px}
+</style></head>
+<body><div class="card">
+<h1>THE ARCHIVE</h1>
+<p>Private Intelligence Repository</p>
+<input id="email" type="email" placeholder="Enter your email">
+<button onclick="go()">ENTER</button>
+<div id="status">
+<h3>Access Confirmed</h3>
+<p>Welcome.</p>
+</div>
+</div>
+<script>
+function go(){
+ const e=document.getElementById('email').value;
+ if(!e){alert('Enter your email');return;}
+ emailjs.send("service_6k89ba9","template_68r2hdj",{visitor_email:e})
+ .finally(()=>{
+ document.getElementById('status').style.display='block';
+ setTimeout(()=>location.href="https://sites.google.com/view/the-archive-of-my-brain-/",2000);
+ });
+}
+</script></body></html>
