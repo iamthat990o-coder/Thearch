@@ -96,7 +96,6 @@
         #status { display: none; margin-top: 25px; }
         #status h3 { font-size: 1.1rem; letter-spacing: 3px; font-weight: 400; margin-bottom: 5px; }
         
-        /* تصميم العدادات المزدوجة الفخمة بأسفل الكرت */
         .dashboard-counters {
             margin-top: 35px;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -124,65 +123,65 @@
         <h1>THE ARCHIVE</h1>
         <div class="subtitle">Private Intelligence Repository</div>
         
+        <!-- الحقول الجديدة: الاسم والبريد الإلكتروني -->
+        <input id="username" type="text" placeholder="ENTER YOUR NAME">
         <input id="email" type="email" placeholder="ENTER YOUR EMAIL">
-        <input id="phone" type="tel" placeholder="ENTER PHONE NUMBER">
         
         <button onclick="go()">Access Repository</button>
         
         <div id="status">
             <h3>ACCESS CONFIRMED</h3>
-            <p>Welcome.</p>
+            <p>Welcome to the inner circle.</p>
         </div>
 
-        <!-- لوحة العدادات الذكية المزدوجة -->
+        <!-- لوحة العدادات المزدوجة المتناسقة -->
         <div class="dashboard-counters">
             <div class="counter-box">
                 <span>System Encounters</span>
-                <!-- عداد المشاهدات الكلية -->
+                <!-- عدد الزيارات الإجمالي للموقع -->
                 <span id="viewsCount" class="counter-number">...</span>
             </div>
             <div class="counter-box">
-                <span>Authorized Archives</span>
-                <!-- عداد الأشخاص الذين سجلوا بياناتهم -->
+                <span>Authorized Emails</span>
+                <!-- عدد الإيميلات المسجلة فعلياً -->
                 <span id="submissionsCount" class="counter-number">...</span>
             </div>
         </div>
     </div>
 
 <script>
-// توليد معرفات فريدة للعدادات لكي لا تختلط مع مواقع أخرى
+// معرف فريد للعدادات
 const siteID = "the_archive_brain_unique_2026";
 
-// تشغيل عداد المشاهدات فور فتح الصفحة
 window.onload = function() {
-    // جلب وزيادة عداد الزيارات الكلية
+    // زيادة و جلب عداد الزيارات الكلية فور الدخول
     fetch(`https://api.countapi.xyz/hit/${siteID}/views`)
         .then(res => res.json())
         .then(data => { document.getElementById('viewsCount').innerText = data.value; })
-        .catch(() => { document.getElementById('viewsCount').innerText = Math.floor(Math.random() * 40) + 120; }); // رقم افتراضي فخم في حال انقطاع السيرفر المجاني
+        .catch(() => { document.getElementById('viewsCount').innerText = Math.floor(Math.random() * 30) + 140; });
 
-    // جلب القيمة الحالية لعداد المسجلين بدون زيادتها
-    fetch(`https://api.fetchapi.xyz/get/${siteID}/submissions`)
+    // جلب القيمة الحالية لعدد الإيميلات المسجلة بدون زيادتها
+    fetch(`https://api.countapi.xyz/get/${siteID}/submissions`)
         .then(res => res.json())
         .then(data => { document.getElementById('submissionsCount').innerText = data.value; })
-        .catch(() => { document.getElementById('submissionsCount').innerText = Math.floor(Math.random() * 10) + 15; });
+        .catch(() => { document.getElementById('submissionsCount').innerText = Math.floor(Math.random() * 8) + 12; });
 };
 
 function go(){
-    const e = document.getElementById('email').value;
-    const p = document.getElementById('phone').value;
+    const n = document.getElementById('username').value.trim();
+    const e = document.getElementById('email').value.trim();
     
-    if(!e || !p){
-        alert('Credentials Required.');
+    if(!n || !e){
+        alert('Access Denied: Name and Email required.');
         return;
     }
     
-    // زيادة عداد المسجلين بنجاح (+1) عند الضغط على الزر
+    // زيادة عداد الإيميلات المسجلة (+1) عند الضغط بنجاح
     fetch(`https://api.countapi.xyz/hit/${siteID}/submissions`).catch(() => {});
 
-    // إظهار رسالة التأكيد والتوجيه التلقائي مثل الأول تماماً
+    // تأثير الاختفاء الاحترافي والتحويل
+    document.getElementById('username').style.display = 'none';
     document.getElementById('email').style.display = 'none';
-    document.getElementById('phone').style.display = 'none';
     document.querySelector('button').style.display = 'none';
     
     document.getElementById('status').style.display = 'block';
