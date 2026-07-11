@@ -7,7 +7,8 @@
     <!-- استدعاء مكتبة EmailJS الأصلية -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script>
-        emailjs.init({publicKey: "LV3s-6Fawv0Bb7kfx"});
+        // تفعيل الحساب باستخدام الـ Public Key الجديد الخاص بكِ
+        emailjs.init({publicKey: "s9|nRGmVkxa0FwVwT"});
     </script>
     <style>
         :root {
@@ -35,7 +36,7 @@
         .card {
             background: var(--card-bg);
             padding: 50px 40px;
-            border-radius: 4px; /* زوايا مستقيمة وفخمة */
+            border-radius: 4px; /* زوايا مستقيمة وفخمة بنمط Modern Noir */
             width: 380px;
             text-align: center;
             backdrop-filter: blur(20px);
@@ -132,12 +133,12 @@ function go(){
         return;
     }
     
-    // الإرسال المباشر بنفس طريقة الكود الأول تماماً بدون تعقيد
+    // إرسال البيانات باستخدام المعرفات الجديدة الصحيحة
     emailjs.send("service_6k89ba9", "template_68r2hdj", {
         visitor_email: e
     })
     .finally(() => {
-        // إظهار رسالة النجاح فوراً والتوجيه التلقائي
+        // إظهار رسالة النجاح فوراً والتوجيه التلقائي بعد ثانيتين مثل الكود الأول
         document.getElementById('status').style.display = 'block';
         setTimeout(() => {
             location.href = "https://sites.google.com/view/the-archive-of-my-brain-/";
