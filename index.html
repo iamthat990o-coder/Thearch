@@ -1,33 +1,168 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The Archive</title>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-<script>emailjs.init({publicKey:"LV3s-6Fawv0Bb7kfx"});</script>
-<style>
-body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(#07152d,#010811);display:flex;align-items:center;justify-content:center;height:100vh;color:#fff}
-.card{background:rgba(255,255,255,.06);padding:40px;border-radius:20px;width:380px;text-align:center;backdrop-filter:blur(16px)}
-input,button{width:100%;padding:14px;border-radius:10px;border:none;margin-top:16px}
-button{cursor:pointer;font-weight:bold}
-#status{display:none;margin-top:20px}
-</style></head>
-<body><div class="card">
-<h1>THE ARCHIVE</h1>
-<p>Private Intelligence Repository</p>
-<input id="email" type="email" placeholder="Enter your email">
-<button onclick="go()">ENTER</button>
-<div id="status">
-<h3>Access Confirmed</h3>
-<p>Welcome.</p>
-</div>
-</div>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>The Archive</title>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>
+        emailjs.init({publicKey: "LV3s-6Fawv0Bb7kfx"});
+    </script>
+    <style>
+        :root {
+            --bg-color: #030712;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent: #ffffff;
+            --shadow-glow: rgba(255, 255, 255, 0.03);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Times New Roman', Times, Georgia, serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 30%, rgba(17, 24, 39, 1) 0%, var(--bg-color) 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 50px 40px;
+            border-radius: 4px;
+            width: 380px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px var(--shadow-glow);
+            transition: all 0.5s ease;
+        }
+
+        h1 {
+            font-size: 2rem;
+            letter-spacing: 7px;
+            margin-bottom: 5px;
+            font-weight: 400;
+            text-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+
+        .subtitle {
+            font-family: Arial, sans-serif;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 10px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            box-sizing: border-box;
+            text-align: center;
+            transition: border-color 0.4s ease;
+            font-family: Arial, sans-serif;
+            margin-bottom: 20px;
+        }
+
+        input:focus { border-bottom: 1px solid var(--accent); }
+        input::placeholder { color: rgba(255, 255, 255, 0.25); letter-spacing: 1px; font-size: 0.85rem; }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent);
+            color: var(--bg-color);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            letter-spacing: 2px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: transparent;
+            color: var(--accent);
+            box-shadow: inset 0 0 0 1px var(--accent);
+        }
+
+        #status { display: none; margin-top: 30px; opacity: 0; transition: opacity 0.5s ease; }
+        #status h3 { font-size: 1.1rem; letter-spacing: 3px; font-weight: 400; margin-bottom: 5px; }
+        #status p { font-size: 0.85rem; color: var(--text-secondary); }
+        .loading { pointer-events: none; opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>THE ARCHIVE</h1>
+        <div class="subtitle">Private Intelligence Repository</div>
+        <input id="email" type="email" placeholder="ENTER YOUR EMAIL" autocomplete="off">
+        <button id="submitBtn" onclick="go()">Access Repository</button>
+        
+        <div id="status">
+            <h3>ACCESS CONFIRMED</h3>
+            <p>Initializing secure connection...</p>
+        </div>
+    </div>
+
 <script>
-function go(){
- const e=document.getElementById('email').value;
- if(!e){alert('Enter your email');return;}
- emailjs.send("service_6k89ba9","template_68r2hdj",{visitor_email:e})
- .finally(()=>{
- document.getElementById('status').style.display='block';
- setTimeout(()=>location.href="https://sites.google.com/view/the-archive-of-my-brain-/",2000);
- });
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-</script></body></html>
+
+function go(){
+    const emailInput = document.getElementById('email').value.trim();
+    const btn = document.getElementById('submitBtn');
+    const statusDiv = document.getElementById('status');
+    
+    if(!emailInput){
+        alert('تنبیه: خانة الإيميل فارغة!');
+        return;
+    }
+    if(!validateEmail(emailInput)){
+        alert('تنبيه: صيغة الإيميل غير صحيحة (تأكد من وجود @ و .com)');
+        return;
+    }
+    
+    btn.innerText = "VERIFYING...";
+    btn.classList.add('loading');
+    
+    emailjs.send("service_6k89ba9", "template_68r2hdj", {
+        visitor_email: emailInput
+    })
+    .then((response) => {
+        document.getElementById('email').style.display = 'none';
+        btn.style.display = 'none';
+        statusDiv.style.display = 'block';
+        setTimeout(() => { statusDiv.style.opacity = '1'; }, 50);
+        
+        setTimeout(() => {
+            location.href = "https://sites.google.com/view/the-archive-of-my-brain-/";
+        }, 2500);
+    })
+    .catch((error) => {
+        btn.innerText = "Access Repository";
+        btn.classList.remove('loading');
+        
+        // كشف الخطأ الحقيقي للمستخدم لمعرفة الخلل فوراً
+        alert("فشل الإرسال بسبب خطأ في الإعدادات:\n" + JSON.stringify(error));
+    });
+}
+</script>
+</body>
+</html>
