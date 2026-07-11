@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>The Archive</title>
+    <!-- استدعاء مكتبة EmailJS -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script>
+        // تفعيل الحساب بالـ Public Key الخاص بكِ
         emailjs.init({publicKey: "LV3s-6Fawv0Bb7kfx"});
     </script>
     <style>
@@ -35,7 +37,7 @@
         .card {
             background: var(--card-bg);
             padding: 50px 40px;
-            border-radius: 4px;
+            border-radius: 4px; /* زوايا مستقيمة لأناقة وفخامة أعلى */
             width: 380px;
             text-align: center;
             backdrop-filter: blur(20px);
@@ -130,37 +132,42 @@ function go(){
     const btn = document.getElementById('submitBtn');
     const statusDiv = document.getElementById('status');
     
+    // التحقق من المدخلات
     if(!emailInput){
-        alert('تنبیه: خانة الإيميل فارغة!');
+        alert('تنبيه: خانة الإيميل فارغة!');
         return;
     }
     if(!validateEmail(emailInput)){
-        alert('تنبيه: صيغة الإيميل غير صحيحة (تأكد من وجود @ و .com)');
+        alert('تنبيه: صيغة الإيميل غير صحيحة (تأكد من كتابة إيميل حقيقي يحمل @ و .com)');
         return;
     }
     
     btn.innerText = "VERIFYING...";
     btn.classList.add('loading');
     
+    // إرسال البيانات
     emailjs.send("service_6k89ba9", "template_68r2hdj", {
         visitor_email: emailInput
     })
     .then((response) => {
+        // في حال النجاح
         document.getElementById('email').style.display = 'none';
         btn.style.display = 'none';
         statusDiv.style.display = 'block';
         setTimeout(() => { statusDiv.style.opacity = '1'; }, 50);
         
+        // التوجيه للرابط
         setTimeout(() => {
             location.href = "https://sites.google.com/view/the-archive-of-my-brain-/";
         }, 2500);
     })
     .catch((error) => {
+        // في حال الفشل
         btn.innerText = "Access Repository";
         btn.classList.remove('loading');
         
-        // كشف الخطأ الحقيقي للمستخدم لمعرفة الخلل فوراً
-        alert("فشل الإرسال بسبب خطأ في الإعدادات:\n" + JSON.stringify(error));
+        // إظهار نص الخطأ القادم من سيرفر EmailJS لمعرفة السبب بدقة
+        alert("فشل الإرسال. نص الخطأ من السيرفر:\n" + JSON.stringify(error));
     });
 }
 </script>
