@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>The Archive</title>
-    <!-- استدعاء مكتبة EmailJS -->
+    <!-- استدعاء مكتبة EmailJS الأصلية -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script>
-        // تفعيل الحساب بالـ Public Key الخاص بكِ
         emailjs.init({publicKey: "LV3s-6Fawv0Bb7kfx"});
     </script>
     <style>
@@ -18,7 +17,6 @@
             --text-primary: #f3f4f6;
             --text-secondary: #9ca3af;
             --accent: #ffffff;
-            --shadow-glow: rgba(255, 255, 255, 0.03);
         }
 
         body {
@@ -37,13 +35,12 @@
         .card {
             background: var(--card-bg);
             padding: 50px 40px;
-            border-radius: 4px; /* زوايا مستقيمة لأناقة وفخامة أعلى */
+            border-radius: 4px; /* زوايا مستقيمة وفخمة */
             width: 380px;
             text-align: center;
             backdrop-filter: blur(20px);
             border: 1px solid var(--border-color);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px var(--shadow-glow);
-            transition: all 0.5s ease;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
         h1 {
@@ -51,7 +48,6 @@
             letter-spacing: 7px;
             margin-bottom: 5px;
             font-weight: 400;
-            text-shadow: 0 0 10px rgba(255,255,255,0.1);
         }
 
         .subtitle {
@@ -74,13 +70,19 @@
             outline: none;
             box-sizing: border-box;
             text-align: center;
-            transition: border-color 0.4s ease;
             font-family: Arial, sans-serif;
             margin-bottom: 20px;
         }
 
-        input:focus { border-bottom: 1px solid var(--accent); }
-        input::placeholder { color: rgba(255, 255, 255, 0.25); letter-spacing: 1px; font-size: 0.85rem; }
+        input:focus { 
+            border-bottom: 1px solid var(--accent); 
+        }
+
+        input::placeholder { 
+            color: rgba(255, 255, 255, 0.25); 
+            letter-spacing: 1px; 
+            font-size: 0.85rem; 
+        }
 
         button {
             width: 100%;
@@ -102,10 +104,10 @@
             box-shadow: inset 0 0 0 1px var(--accent);
         }
 
-        #status { display: none; margin-top: 30px; opacity: 0; transition: opacity 0.5s ease; }
-        #status h3 { font-size: 1.1rem; letter-spacing: 3px; font-weight: 400; margin-bottom: 5px; }
-        #status p { font-size: 0.85rem; color: var(--text-secondary); }
-        .loading { pointer-events: none; opacity: 0.5; }
+        #status { 
+            display: none; 
+            margin-top: 20px; 
+        }
     </style>
 </head>
 <body>
@@ -113,63 +115,36 @@
     <div class="card">
         <h1>THE ARCHIVE</h1>
         <div class="subtitle">Private Intelligence Repository</div>
-        <input id="email" type="email" placeholder="ENTER YOUR EMAIL" autocomplete="off">
-        <button id="submitBtn" onclick="go()">Access Repository</button>
+        <input id="email" type="email" placeholder="ENTER YOUR EMAIL">
+        <button onclick="go()">Access Repository</button>
         
         <div id="status">
             <h3>ACCESS CONFIRMED</h3>
-            <p>Initializing secure connection...</p>
+            <p>Welcome.</p>
         </div>
     </div>
 
 <script>
-function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
 function go(){
-    const emailInput = document.getElementById('email').value.trim();
-    const btn = document.getElementById('submitBtn');
-    const statusDiv = document.getElementById('status');
-    
-    // التحقق من المدخلات
-    if(!emailInput){
-        alert('تنبيه: خانة الإيميل فارغة!');
-        return;
-    }
-    if(!validateEmail(emailInput)){
-        alert('تنبيه: صيغة الإيميل غير صحيحة (تأكد من كتابة إيميل حقيقي يحمل @ و .com)');
+    const e = document.getElementById('email').value;
+    if(!e){
+        alert('Enter your email');
         return;
     }
     
-    btn.innerText = "VERIFYING...";
-    btn.classList.add('loading');
-    
-    // إرسال البيانات
+    // الإرسال المباشر بنفس طريقة الكود الأول تماماً بدون تعقيد
     emailjs.send("service_6k89ba9", "template_68r2hdj", {
-        visitor_email: emailInput
+        visitor_email: e
     })
-    .then((response) => {
-        // في حال النجاح
-        document.getElementById('email').style.display = 'none';
-        btn.style.display = 'none';
-        statusDiv.style.display = 'block';
-        setTimeout(() => { statusDiv.style.opacity = '1'; }, 50);
-        
-        // التوجيه للرابط
+    .finally(() => {
+        // إظهار رسالة النجاح فوراً والتوجيه التلقائي
+        document.getElementById('status').style.display = 'block';
         setTimeout(() => {
             location.href = "https://sites.google.com/view/the-archive-of-my-brain-/";
-        }, 2500);
-    })
-    .catch((error) => {
-        // في حال الفشل
-        btn.innerText = "Access Repository";
-        btn.classList.remove('loading');
-        
-        // إظهار نص الخطأ القادم من سيرفر EmailJS لمعرفة السبب بدقة
-        alert("فشل الإرسال. نص الخطأ من السيرفر:\n" + JSON.stringify(error));
+        }, 2000);
     });
 }
 </script>
+
 </body>
 </html>
