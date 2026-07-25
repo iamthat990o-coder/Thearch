@@ -1,0 +1,554 @@
+#!/usr/bin/env bash
+# سكربت إنشاء مشروع: محرّك المطابقة
+# التشغيل:  bash setup.sh    ثم اتبع تعليمات README
+set -e
+echo "إنشاء المشروع…"
+mkdir -p job-match-engine/server job-match-engine/web/src
+cd job-match-engine
+
+cat > 'README.md' << '__EOF_JME_9271__'
+# محرّك المطابقة | Job Match Engine
+
+محرّك ذكاء اصطناعي يقرأ السيرة الذاتية، يطابقها مع الوظائف، ويصيغ سيرة مخصصة لكل وظيفة — للسوق السعودي والخليجي.
+
+> نسخة أولية (MVP). القلب التقني لمنتج مثل Uptal: **قراءة السيرة ← المطابقة ← صياغة سيرة لكل وظيفة.**
+
+---
+
+## المكوّنات
+
+```
+job-match-engine/
+├── server/     # backend آمن (Node + Express) — يخفي مفتاح الذكاء الاصطناعي
+└── web/        # الواجهة (React + Vite) — كحلي وأبيض
+```
+
+**ليش backend؟** عشان مفتاح Anthropic ما ينكشف في المتصفح. الواجهة تكلّم السيرفر، والسيرفر يكلّم الذكاء الاصطناعي.
+
+---
+
+## التشغيل محليًا
+
+### 1) السيرفر (backend)
+
+```bash
+cd server
+npm install
+cp .env.example .env      # وحُط مفتاحك داخل .env
+npm start                 # يشتغل على http://localhost:8787
+```
+
+احصل على مفتاح من: https://console.anthropic.com
+
+### 2) الواجهة (frontend)
+
+في نافذة طرفية ثانية:
+
+```bash
+cd web
+npm install
+npm run dev               # يشتغل على http://localhost:5173
+```
+
+افتح المتصفح على العنوان اللي يطلع لك. الواجهة تمرّر طلبات `/api` للسيرفر تلقائيًا.
+
+---
+
+## رفع المشروع على GitHub
+
+أنشئ مستودع فاضي جديد على GitHub (بدون README)، بعدها من داخل مجلد المشروع:
+
+```bash
+git init
+git add .
+git commit -m "أول نسخة: محرّك المطابقة"
+git branch -M main
+git remote add origin https://github.com/USERNAME/REPO.git
+git push -u origin main
+```
+
+استبدل `USERNAME/REPO` باسمك واسم المستودع.
+
+---
+
+## الخطوات القادمة (خارطة الطريق)
+
+- [ ] قاعدة بيانات (PostgreSQL) للمستخدمين والسير والوظائف
+- [ ] نظام حسابات واشتراكات
+- [ ] embeddings لفلترة الوظائف قبل الذكاء الاصطناعي (توفير التكلفة)
+- [ ] ربط مصادر وظائف رسمية (APIs / شراكات)
+
+---
+
+بالتوفيق · الرياض، السعودية
+__EOF_JME_9271__
+
+cat > '.gitignore' << '__EOF_JME_9271__'
+# dependencies
+node_modules/
+
+# env / secrets
+.env
+*.env
+!.env.example
+
+# build output
+dist/
+build/
+
+# logs
+*.log
+npm-debug.log*
+
+# os / editor
+.DS_Store
+.vscode/
+.idea/
+__EOF_JME_9271__
+
+cat > 'server/package.json' << '__EOF_JME_9271__'
+{
+  "name": "job-match-server",
+  "version": "1.0.0",
+  "description": "Secure backend for the job match engine",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2"
+  }
+}
+__EOF_JME_9271__
+
+cat > 'server/.env.example' << '__EOF_JME_9271__'
+# انسخ هذا الملف باسم .env وحُط مفتاحك الحقيقي
+ANTHROPIC_API_KEY=sk-ant-xxxxxxxxxxxxxxxxxxxxx
+PORT=8787
+__EOF_JME_9271__
+
+cat > 'server/index.js' << '__EOF_JME_9271__'
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import Anthropic from "@anthropic-ai/sdk";
+
+dotenv.config();
+
+const app = express();
+app.use(cors());
+app.use(express.json({ limit: "2mb" }));
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const MODEL = "claude-sonnet-4-6";
+
+// وظائف تجريبية — استبدلها بقاعدة بيانات / مصادر رسمية
+const JOBS = [
+  { id: 1, title: "محلل مالي", company: "شركة اتصالات كبرى", city: "الرياض", type: "قطاع خاص",
+    desc: "إعداد الموازنات والتقارير المالية وفق معايير IFRS، تحليل الأداء المالي، استخدام SAP، بناء نماذج مالية، متابعة التدفقات النقدية." },
+  { id: 2, title: "مهندس برمجيات (Backend)", company: "شركة ناشئة تقنية", city: "جدة", type: "شركات ناشئة",
+    desc: "تطوير خدمات backend باستخدام Node.js أو Python، تصميم قواعد بيانات، بناء REST APIs، العمل مع السحابة AWS، خبرة في Git." },
+  { id: 3, title: "أخصائي تسويق رقمي", company: "مجموعة تجزئة", city: "الرياض", type: "قطاع خاص",
+    desc: "إدارة حملات إعلانية على المنصات، تحليل البيانات، SEO، إدارة محتوى السوشيال ميديا، متابعة مؤشرات الأداء ROI." },
+  { id: 4, title: "مدير مشاريع", company: "جهة شبه حكومية", city: "الدمام", type: "شبه حكومي",
+    desc: "إدارة دورة حياة المشاريع، منهجيات Agile وPMP، إدارة الميزانيات وأصحاب المصلحة، تقارير التقدم، إدارة المخاطر." },
+  { id: 5, title: "محلل بيانات", company: "بنك محلي", city: "الرياض", type: "قطاع خاص",
+    desc: "تحليل البيانات باستخدام SQL وPython، بناء لوحات معلومات Power BI، نمذجة إحصائية، استخلاص رؤى للأعمال." },
+];
+
+app.get("/api/jobs", (req, res) => res.json(JOBS));
+
+// تحليل السيرة + المطابقة
+app.post("/api/analyze", async (req, res) => {
+  const { resumeText } = req.body || {};
+  if (!resumeText?.trim()) return res.status(400).json({ error: "resumeText مطلوب" });
+
+  const jobsForPrompt = JOBS.map(
+    (j) => `#${j.id} — ${j.title} | ${j.company} | ${j.city} | ${j.type}\n${j.desc}`
+  ).join("\n\n");
+
+  const prompt = `أنت محرّك مطابقة وظائف. حلّل السيرة الذاتية وطابقها مع الوظائف.
+
+السيرة الذاتية:
+"""${resumeText.slice(0, 6000)}"""
+
+الوظائف:
+"""${jobsForPrompt}"""
+
+أعِد فقط JSON صالح بدون markdown:
+{
+ "profile": {"title":"...","years":"...","skills":["..."],"summary":"..."},
+ "matches":[{"id":رقم,"score":0-100,"reason":"سبب بجملة","gaps":"النواقص بجملة"}]
+}
+رتّب matches تنازليًا حسب score. بالعربية.`;
+
+  try {
+    const msg = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: 1200,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const raw = msg.content.filter((b) => b.type === "text").map((b) => b.text).join("").replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(raw);
+    const matches = parsed.matches
+      .map((m) => ({ ...m, job: JOBS.find((j) => j.id === m.id) }))
+      .filter((m) => m.job);
+    res.json({ profile: parsed.profile, matches });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "تعذّر التحليل" });
+  }
+});
+
+// صياغة سيرة مخصصة لوظيفة
+app.post("/api/rewrite", async (req, res) => {
+  const { resumeText, jobId } = req.body || {};
+  const job = JOBS.find((j) => j.id === Number(jobId));
+  if (!resumeText?.trim() || !job) return res.status(400).json({ error: "بيانات ناقصة" });
+
+  const prompt = `أعد صياغة السيرة الذاتية لتناسب هذه الوظيفة تحديدًا، مع إبراز الكلمات المفتاحية لتجاوز أنظمة ATS. سيرة مختصرة واحترافية بالعربية (ملخص مهني + أبرز المهارات + أبرز الخبرات). لا تخترع خبرات غير موجودة.
+
+الوظيفة: ${job.title} — ${job.desc}
+
+السيرة الأصلية:
+"""${resumeText.slice(0, 4000)}"""`;
+
+  try {
+    const msg = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: 1200,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const text = msg.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
+    res.json({ text });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "تعذّرت الصياغة" });
+  }
+});
+
+const PORT = process.env.PORT || 8787;
+app.listen(PORT, () => console.log(`✅ Server on http://localhost:${PORT}`));
+__EOF_JME_9271__
+
+cat > 'web/package.json' << '__EOF_JME_9271__'
+{
+  "name": "job-match-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "^0.462.0",
+    "mammoth": "^1.8.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.5"
+  }
+}
+__EOF_JME_9271__
+
+cat > 'web/vite.config.js' << '__EOF_JME_9271__'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      "/api": "http://localhost:8787",
+    },
+  },
+});
+__EOF_JME_9271__
+
+cat > 'web/index.html' << '__EOF_JME_9271__'
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>محرّك المطابقة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style> body { font-family: 'Tajawal', system-ui, sans-serif; } </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+__EOF_JME_9271__
+
+cat > 'web/src/main.jsx' << '__EOF_JME_9271__'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App.jsx";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+__EOF_JME_9271__
+
+cat > 'web/src/App.jsx' << '__EOF_JME_9271__'
+import React, { useState, useRef, useCallback } from "react";
+import mammoth from "mammoth";
+import { Upload, FileText, Loader2, Target, Sparkles, X, PenLine, Check, Copy } from "lucide-react";
+
+const NAVY = "#16264D";
+const NAVY_2 = "#28407A";
+
+async function extractPdfText(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+  let text = "";
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map((it) => it.str).join(" ") + "\n";
+  }
+  return text;
+}
+
+async function extractDocxText(file) {
+  const buf = await file.arrayBuffer();
+  const res = await mammoth.extractRawText({ arrayBuffer: buf });
+  return res.value;
+}
+
+export default function App() {
+  const [resumeText, setResumeText] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [parsing, setParsing] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [matches, setMatches] = useState(null);
+  const [error, setError] = useState("");
+  const [drag, setDrag] = useState(false);
+  const [rewriteFor, setRewriteFor] = useState(null);
+  const [rewrites, setRewrites] = useState({});
+  const [copied, setCopied] = useState(null);
+  const inputRef = useRef(null);
+
+  const handleFile = useCallback(async (file) => {
+    if (!file) return;
+    setError(""); setParsing(true); setFileName(file.name);
+    try {
+      let text = ""; const name = file.name.toLowerCase();
+      if (name.endsWith(".pdf")) text = await extractPdfText(file);
+      else if (name.endsWith(".docx")) text = await extractDocxText(file);
+      else if (name.endsWith(".txt")) text = await file.text();
+      else throw new Error("الصيغة غير مدعومة. استخدم PDF أو DOCX أو TXT.");
+      if (!text.trim()) throw new Error("ما قدرنا نقرأ نص من الملف. جرّب لصق النص يدويًا.");
+      setResumeText(text.trim());
+    } catch (e) {
+      setError(e.message || "صار خطأ أثناء قراءة الملف."); setFileName("");
+    } finally { setParsing(false); }
+  }, []);
+
+  const analyze = async () => {
+    if (!resumeText.trim()) { setError("ارفع سيرتك الذاتية أو الصق نصها أولًا."); return; }
+    setError(""); setAnalyzing(true); setProfile(null); setMatches(null); setRewrites({});
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resumeText }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setProfile(data.profile);
+      setMatches(data.matches);
+    } catch (e) { setError("ما قدرنا نحلل السيرة. تأكد أن السيرفر شغّال."); }
+    finally { setAnalyzing(false); }
+  };
+
+  const rewriteResume = async (job) => {
+    setRewriteFor(job.id); setError("");
+    try {
+      const res = await fetch("/api/rewrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resumeText, jobId: job.id }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setRewrites((r) => ({ ...r, [job.id]: data.text }));
+    } catch (e) { setError("تعذّر إنشاء الصياغة. جرّب مرة ثانية."); }
+    finally { setRewriteFor(null); }
+  };
+
+  const copyText = (id, text) => {
+    navigator.clipboard?.writeText(text);
+    setCopied(id); setTimeout(() => setCopied(null), 1500);
+  };
+
+  const reset = () => { setResumeText(""); setFileName(""); setProfile(null); setMatches(null); setError(""); setRewrites({}); };
+  const scoreColor = (s) => (s >= 80 ? "#16264D" : s >= 60 ? "#5A6B8C" : "#9AA3B5");
+
+  return (
+    <div dir="rtl" className="min-h-screen bg-white text-slate-800">
+      <header style={{ background: NAVY }}>
+        <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white">
+              <Target className="w-5 h-5" style={{ color: NAVY }} />
+            </div>
+            <span className="font-extrabold text-lg text-white">محرّك المطابقة</span>
+          </div>
+          <span className="text-xs text-blue-200">نسخة أولية · MVP</span>
+        </div>
+      </header>
+
+      <main className="max-w-3xl mx-auto px-5 py-8">
+        <h1 className="text-2xl font-extrabold mb-1 leading-tight" style={{ color: NAVY }}>
+          ارفع السيرة الذاتية، ونطابقها ونصيغها بالذكاء الاصطناعي
+        </h1>
+        <p className="text-slate-500 mb-6 text-sm">
+          قراءة السيرة ← استخراج المؤهلات ← نسبة التوافق ← صياغة سيرة مخصصة لكل وظيفة.
+        </p>
+
+        {!resumeText ? (
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+            onDragLeave={() => setDrag(false)}
+            onDrop={(e) => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files[0]); }}
+            onClick={() => inputRef.current?.click()}
+            className="rounded-2xl border-2 border-dashed p-10 text-center cursor-pointer transition hover:bg-slate-50"
+            style={{ borderColor: drag ? NAVY : "#C7CEDB", background: drag ? "#EEF3FB" : "#fff" }}
+          >
+            <input ref={inputRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
+            {parsing ? (
+              <div className="flex flex-col items-center gap-2 text-slate-500">
+                <Loader2 className="w-7 h-7 animate-spin" /><span>نقرأ الملف…</span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <Upload className="w-8 h-8" style={{ color: NAVY_2 }} />
+                <span className="font-bold" style={{ color: NAVY }}>اسحب السيرة هنا أو اضغط للرفع</span>
+                <span className="text-xs text-slate-400">PDF أو DOCX أو TXT</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-2xl border p-4 flex items-center justify-between" style={{ borderColor: "#E2E6EF" }}>
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5" style={{ color: NAVY }} />
+              <div>
+                <div className="font-bold text-sm" style={{ color: NAVY }}>{fileName || "نص السيرة الذاتية"}</div>
+                <div className="text-xs text-slate-400">{resumeText.length} حرف تم استخراجه</div>
+              </div>
+            </div>
+            <button onClick={reset} className="text-slate-400 hover:text-slate-600 p-1"><X className="w-5 h-5" /></button>
+          </div>
+        )}
+
+        {!resumeText && (
+          <textarea value={resumeText} onChange={(e) => setResumeText(e.target.value)}
+            placeholder="أو الصق نص سيرتك الذاتية هنا مباشرة…"
+            className="mt-4 w-full h-28 rounded-xl border p-3 text-sm bg-white focus:outline-none focus:ring-2 resize-none"
+            style={{ borderColor: "#D7DCE7" }} />
+        )}
+
+        {error && <div className="mt-4 rounded-xl bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">{error}</div>}
+
+        <button onClick={analyze} disabled={analyzing || !resumeText.trim()}
+          className="mt-5 w-full rounded-xl py-3.5 font-bold text-white flex items-center justify-center gap-2 disabled:opacity-40 transition"
+          style={{ background: NAVY }}>
+          {analyzing ? (<><Loader2 className="w-5 h-5 animate-spin" /> نحلّل ونطابق…</>) : (<><Sparkles className="w-5 h-5" /> حلّل وطابق الوظائف</>)}
+        </button>
+
+        {profile && (
+          <section className="mt-8 rounded-2xl border p-5" style={{ borderColor: "#E2E6EF" }}>
+            <h2 className="font-extrabold mb-3 flex items-center gap-2" style={{ color: NAVY }}>
+              <span className="w-1.5 h-5 rounded-full" style={{ background: NAVY }} /> الملف المستخرج
+            </h2>
+            <div className="text-sm space-y-2">
+              <p><span className="text-slate-400">المسمى:</span> <span className="font-bold" style={{ color: NAVY }}>{profile.title}</span></p>
+              <p><span className="text-slate-400">الخبرة:</span> {profile.years}</p>
+              <p className="text-slate-600">{profile.summary}</p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {profile.skills?.map((s, i) => (
+                  <span key={i} className="text-xs rounded-full px-3 py-1" style={{ background: "#EEF1F7", color: NAVY }}>{s}</span>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {matches && (
+          <section className="mt-6 space-y-3">
+            <h2 className="font-extrabold flex items-center gap-2" style={{ color: NAVY }}>
+              <span className="w-1.5 h-5 rounded-full" style={{ background: NAVY }} /> الوظائف المطابقة ({matches.length})
+            </h2>
+            {matches.map((m) => (
+              <div key={m.id} className="rounded-2xl border p-4" style={{ borderColor: "#E2E6EF" }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <div className="font-bold" style={{ color: NAVY }}>{m.job.title}</div>
+                    <div className="text-xs text-slate-400 mt-0.5">{m.job.company} · {m.job.city} · {m.job.type}</div>
+                  </div>
+                  <div className="text-center shrink-0">
+                    <div className="text-2xl font-extrabold" style={{ color: scoreColor(m.score) }}>{m.score}%</div>
+                    <div className="text-[10px] text-slate-400">توافق</div>
+                  </div>
+                </div>
+                <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: "#EEF1F7" }}>
+                  <div className="h-full rounded-full transition-all" style={{ width: `${m.score}%`, background: scoreColor(m.score) }} />
+                </div>
+                <p className="text-sm text-slate-600 mt-3">{m.reason}</p>
+                {m.gaps && <p className="text-xs text-slate-500 mt-1">⚠ {m.gaps}</p>}
+
+                {!rewrites[m.id] ? (
+                  <button onClick={() => rewriteResume(m.job)} disabled={rewriteFor === m.id}
+                    className="mt-3 text-sm font-bold rounded-lg px-3 py-2 flex items-center gap-2 disabled:opacity-50 transition"
+                    style={{ background: "#EEF1F7", color: NAVY }}>
+                    {rewriteFor === m.id ? (<><Loader2 className="w-4 h-4 animate-spin" /> نصيغ سيرة مخصصة…</>) : (<><PenLine className="w-4 h-4" /> صِغ سيرة مخصصة لهذه الوظيفة</>)}
+                  </button>
+                ) : (
+                  <div className="mt-3 rounded-xl border p-3" style={{ borderColor: "#D7DCE7", background: "#FAFBFD" }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold" style={{ color: NAVY }}>سيرة مخصصة لهذه الوظيفة</span>
+                      <button onClick={() => copyText(m.id, rewrites[m.id])} className="text-xs flex items-center gap-1" style={{ color: NAVY_2 }}>
+                        {copied === m.id ? (<><Check className="w-3.5 h-3.5" /> تم النسخ</>) : (<><Copy className="w-3.5 h-3.5" /> نسخ</>)}
+                      </button>
+                    </div>
+                    <pre className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed" style={{ fontFamily: "'Tajawal', sans-serif" }}>{rewrites[m.id]}</pre>
+                  </div>
+                )}
+              </div>
+            ))}
+          </section>
+        )}
+      </main>
+
+      <footer className="mt-6" style={{ background: NAVY }}>
+        <div className="max-w-3xl mx-auto px-5 py-6 text-center">
+          <p className="text-white font-extrabold text-lg">بالتوفيق</p>
+          <p className="text-blue-200 text-sm mt-1">الرياض · السعودية</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+__EOF_JME_9271__
+
+echo "✅ تم إنشاء مجلد job-match-engine بكل الملفات."
+echo "التالي: اقرأ job-match-engine/README.md"
+
